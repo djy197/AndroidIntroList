@@ -25,7 +25,8 @@
         <activity android:name=".Intro03Activity" />
         <activity android:name=".Intro04Activity" />
         <activity android:name=".Intro05Activity" />
-        <activity android:name=".Intro05_1Activity"></activity>
+        <activity android:name=".Intro05_1Activity" />
+        <activity android:name=".LoginActivity"></activity>
     </application>
 
 </manifest>
