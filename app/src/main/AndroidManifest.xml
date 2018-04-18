@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.introlist.djy.androidintrolist">
 
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -9,24 +10,38 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+        <activity android:name=".MainActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".Intro01Activity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".Intro00Activity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".Intro00_1Activity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".Intro00_2Activity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".Intro02Activity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".Intro02_1Activity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".Intro03Activity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".Intro04Activity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".Intro05Activity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".Intro05_1Activity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".LoginActivity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".Intro01Activity" />
-        <activity android:name=".Intro00Activity" />
-        <activity android:name=".Intro00_1Activity" />
-        <activity android:name=".Intro00_2Activity" />
-        <activity android:name=".Intro02Activity" />
-        <activity android:name=".Intro02_1Activity" />
-        <activity android:name=".Intro03Activity" />
-        <activity android:name=".Intro04Activity" />
-        <activity android:name=".Intro05Activity" />
-        <activity android:name=".Intro05_1Activity" />
-        <activity android:name=".LoginActivity"></activity>
+        <activity android:name=".RegisterActivity"
+            android:screenOrientation="portrait"/>
     </application>
 
 </manifest>

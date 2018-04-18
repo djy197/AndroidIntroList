@@ -10,10 +10,8 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONException;
@@ -29,123 +27,101 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-public class LoginActivity extends AppCompatActivity {
+public class RegisterActivity extends AppCompatActivity {
 
-    private EditText inputEmail, inputPassword;
-    private ProgressDialog progressDialog;
+    private static final String TAG = RegisterActivity.class.getSimpleName();
+    private Button btnRegister;
+    private Button btnLinkToLogin;
+    private EditText inputFullName;
+    private EditText inputEmail;
+    private EditText inputPassword;
     private SessionManager session;
-    private Feedback feedback;
-    private Button loginButton;
+    private ProgressDialog pDialog;
+    private String name;
+    Feedback feedback;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
+        setContentView(R.layout.activity_register);
 
-
-        /**
-         * If the user just registered an account from Register.class,
-         * the parcelable should be retrieved
-         */
-        Bundle bundle = getIntent().getExtras();
-        if (bundle != null) {
-            // Retrieve the parcelable
-            Feedback feedback = bundle.getParcelable("feedback");
-            // Get the from the object
-            String userName = feedback.getName();
-            TextView display = findViewById(R.id.display);
-            display.setVisibility(View.VISIBLE);
-            String prompt = userName.substring(0, 1).toUpperCase() + userName.substring(1) + " " + getString(R.string.account_created);
-            display.setText(prompt);
-
-        }
-
+        inputFullName = findViewById(R.id.name);
         inputEmail = findViewById(R.id.email);
         inputPassword = findViewById(R.id.password);
-        loginButton = findViewById(R.id.btnLogin);
+        btnRegister = findViewById(R.id.btnRegister);
+        btnLinkToLogin = findViewById(R.id.btnLinkToLoginScreen);
 
 
-        /**
-         * Prepare the dialog to display when the login button is pressed
-         */
-        progressDialog = new ProgressDialog(this);
-        progressDialog.setCancelable(false);
+        // Preparing the Progress dialog
+        pDialog = new ProgressDialog(this);
+        pDialog.setCancelable(false);
 
 
-        /**
-         * Use the SessionManager class to check whether
-         * the user already logged in, is yest  then go to the MainActivity
-         */
+        // Session manager
         session = new SessionManager(getApplicationContext());
-
+        // Check if user is already logged in or not
         if (session.isLoggedIn()) {
+            // User is already logged in. Take him to main activity
             startActivity(new Intent(this, MainActivity.class));
             finish();
         }
 
+        // Register Button Click event
+        btnRegister.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                name = inputFullName.getText().toString().trim();
+                String email = inputEmail.getText().toString().trim();
+                String password = inputPassword.getText().toString().trim();
+
+                if (!name.isEmpty() && !email.isEmpty() && !password.isEmpty()) {
+                    // Avoid repeated clicks by disabling the button
+                    btnRegister.setClickable(false);
+                    //Register the user
+                    registerUser(name, email, password);
+
+
+                } else {
+                    Toast.makeText(getApplicationContext(),
+                            "Please enter your details!", Toast.LENGTH_LONG)
+                            .show();
+                }
+            }
+        });
+
+        // Link to Login Screen
+        btnLinkToLogin.setOnClickListener(new View.OnClickListener() {
+
+            public void onClick(View view) {
+                Intent i = new Intent(getApplicationContext(),
+                        LoginActivity.class);
+                startActivity(i);
+                finish();
+            }
+        });
 
     }
 
     /**
-     *  Process the user input and log in if credentials are correct
-     *  Disable the button while login is processing
-     *  @param view from activity_login.xml
-     */
-    public void btnLogin(View view) {
-
-
-        String email = inputEmail.getText().toString().trim();
-        String password = inputPassword.getText().toString().trim();
-
-        // Check for empty data in the form
-        if (!email.isEmpty() && !password.isEmpty()) {
-
-            // Avoid multiple clicks on the button
-            loginButton.setClickable(false);
-
-            //Todo : ensure the user has Internet connection
-
-            // Display the progress Dialog
-            progressDialog.setMessage("Logging in ...");
-            if (!progressDialog.isShowing())
-                progressDialog.show();
-
-            //Todo: need to check weather the user has Internet before attempting checking the data
-            // Start fetching the data from the Internet
-            //new OnlineCredentialValidation().execute(email,password);
-            startActivity(new Intent(getApplicationContext(), MainActivity.class));
-            finish();
-
-
-        } else {
-            // Prompt user to enter credentials
-            Toast.makeText(getApplicationContext(),
-                    R.string.enter_credentials, Toast.LENGTH_LONG)
-                    .show();
-        }
-    }
-
-
-    /**
-     * Press the button register, go to Registration form
+     * Register a new user to the server database
      *
-     * @param view from the activity_login.xml
+     * @param name     username
+     * @param email    email address, which should be unique to the user
+     * @param password length should be < 50 characters
      */
-    public void btnRegister(View view) {
-        startActivity(new Intent(getApplicationContext(), RegisterActivity.class));
-        finish();
+    private void registerUser(final String name, final String email,
+                              final String password) {
+
+        pDialog.setMessage("Registering ...");
+        if (!pDialog.isShowing()) pDialog.show();
+        //Todo: Need to check Internet connection
+        new DownloadData().execute(name, email, password);
+
+
     }
 
 
+    class DownloadData extends AsyncTask<String, Void, Integer> {
 
-    /**
-     * Use the email and password provided to log the user in if the credentials are valid
-     *
-     */
-
-
-
-    class OnlineCredentialValidation extends AsyncTask<String, Void, Integer> {
 
         @Override
         protected Integer doInBackground(String... strings) {
@@ -157,11 +133,12 @@ public class LoginActivity extends AppCompatActivity {
 
 
             // Variables
-            final String BASE_URL = new Config().getLoginUrl();
+            final String BASE_URL = new Config().getRegisterUrl();
+            final String NAME = "name";
             final String EMAIL = "email";
             final String PASSWORD = "password";
-            final String PARAMS = EMAIL + "=" + strings[0] + "&" + PASSWORD + "=" + strings[1];
-            Log.d("TAG","Email and Pass - "+EMAIL + "=" + strings[0] + "&" + PASSWORD + "=" + strings[1]);
+            final String PARAMS = NAME + "=" + strings[0] + "&" + EMAIL + "=" + strings[1] + "&" + PASSWORD + "=" + strings[2];
+
 
             URL url = null;
             HttpURLConnection connection = null;
@@ -174,9 +151,9 @@ public class LoginActivity extends AppCompatActivity {
                 connection.setDoOutput(true);
 
                 // Timeout for reading InputStream arbitrarily set to 3000ms.
-                connection.setReadTimeout(15000);
+                connection.setReadTimeout(9000);
                 // Timeout for connection.connect() arbitrarily set to 3000ms.
-                connection.setConnectTimeout(15000);
+                connection.setConnectTimeout(9000);
 
                 // Output the stream to the server
                 request = new OutputStreamWriter(connection.getOutputStream());
@@ -208,26 +185,21 @@ public class LoginActivity extends AppCompatActivity {
 
                 return parsingFeedback;
             }
+
+
         }
-
-
 
 
         @Override
         protected void onPostExecute(Integer mFeedback) {
             super.onPostExecute(mFeedback);
-            if (progressDialog.isShowing()) progressDialog.dismiss();
-
+            if (pDialog.isShowing()) pDialog.dismiss();
             if (mFeedback == feedback.SUCCESS) {
-                // Update the session
-                session.setLogin(true);
-                // Move the user to MainActivity and pass in the User name which was form the server
-                Intent intent = new Intent(getApplication(), MainActivity.class);
+                Intent intent = new Intent(getApplication(), LoginActivity.class);
                 intent.putExtra("feedback", feedback);
                 startActivity(intent);
             } else {
-                // Allow the user to click the button
-                loginButton.setClickable(true);
+                btnRegister.setClickable(true);
                 Toast.makeText(getApplication(), feedback.getError_message(), Toast.LENGTH_SHORT).show();
             }
 
@@ -257,11 +229,6 @@ public class LoginActivity extends AppCompatActivity {
     }
 
 
-    /**
-     * Parsing the string response from the Server
-     * @param response
-     * @return
-     */
     public int parsingResponse(String response) {
 
         try {
@@ -278,9 +245,7 @@ public class LoginActivity extends AppCompatActivity {
 
             if (!error) {
                 //No error, return from the server was {"error":false}
-                JSONObject user = jObj.getJSONObject("user");
-                String email = user.getString("email");
-                feedback.setName(email);
+                feedback.setName(name);
                 return feedback.SUCCESS;
             } else {
                 // The return contains error messages
